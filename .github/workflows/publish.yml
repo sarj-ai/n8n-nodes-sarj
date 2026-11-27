@@ -11,6 +11,10 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/@sarj-ai/n8n-nodes-sarj
     permissions:
       contents: read
       id-token: write
@@ -39,6 +43,6 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
 # Preferred: configure npm Trusted Publishing for sarj-ai/n8n-nodes-sarj,
-# workflow publish.yml, with no environment restriction. Leave NPM_TOKEN unset.
+# workflow publish.yml, environment npm. Leave NPM_TOKEN unset.
 # Initial publication may require the owner's approved bootstrap authentication.
 # Never publish this verified-node candidate from a local workstation.
