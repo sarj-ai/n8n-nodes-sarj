@@ -1,0 +1,9 @@
+{
+	"node": "n8n-nodes-sarj.sarj",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Analytics", "Communication"],
+	"resources": {
+		"primaryDocumentation": [{ "url": "https://github.com/sarj-ai/n8n-nodes-sarj#readme" }]
+	}
+}

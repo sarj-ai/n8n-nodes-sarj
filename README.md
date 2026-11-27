@@ -1,262 +1,91 @@
-![Banner image](https://user-images.githubusercontent.com/10284570/173569848-c624317f-42b1-45a6-ab09-f0ea3c247648.png)
+# n8n-nodes-sarj
 
-# n8n-nodes-starter
+Read Sarj AI call history, details, transcripts and analysis in n8n workflows.
 
-This starter repository helps you build custom integrations for [n8n](https://n8n.io). It includes example nodes, credentials, the node linter, and all the tooling you need to get started.
+This is a release candidate. npm publication and n8n verification have not completed.
 
-## Quick Start
+## Requirements
 
-> [!TIP]
-> **New to building n8n nodes?** The fastest way to get started is with `npm create @n8n/node`. This command scaffolds a complete node package for you using the [@n8n/node-cli](https://www.npmjs.com/package/@n8n/node-cli).
+- n8n 2.49.7 or later, running on a supported Node.js 24 or later release.
+- An existing Sarj organization and an API key for that organization with `calls:read` permission.
+- Call history, transcript and analysis access enabled for the organization. These existing API reads are organization-gated and may require pilot eligibility. Contact engineering@sarj.ai if your organization is not enabled. Installing this package does not enable the service feature.
 
-**To create a new node package from scratch:**
+The node uses Sarj's existing REST API at `https://platform-api.sarj.ai/api/v1`. It integrates one service and contains no runtime dependencies. The four reads use the same organization and feature checks as Sarj's call analytics service.
 
-```bash
-npm create @n8n/node
-```
+## Installation
 
-**Already using this starter? Start developing with:**
+After the package is published, an n8n instance owner can install `n8n-nodes-sarj` from **Settings → Community nodes**, following [n8n's installation guide](https://docs.n8n.io/integrations/community-nodes/installation/).
 
-```bash
+Availability in the verified nodes panel and n8n Cloud depends on n8n approving the package. This release candidate does not claim verified status.
+
+## Credentials
+
+1. Open [Sarj API keys](https://platform.sarj.ai/api-keys) and obtain a key with `calls:read` for the intended organization. Ask an organization administrator if your role cannot issue keys.
+2. Add a **Sarj API** credential in n8n and paste the key into **API Key**.
+3. Test the credential. The test reads at most one call to validate the key, organization access and call-read feature eligibility.
+4. Select this credential in your **Sarj AI** node.
+
+n8n stores the credential using its encrypted credential system. The node passes authentication through n8n's `httpRequestWithAuthentication` helper. It does not read keys from workflow parameters, environment variables or files.
+
+## Operations
+
+Choose **Resource → Call** and one of the following operations:
+
+| n8n operation  | Existing REST read                | Output                                                    |
+| -------------- | --------------------------------- | --------------------------------------------------------- |
+| Get Many       | `GET /calls`                      | One n8n item per call summary, newest first               |
+| Get            | `GET /calls/{call_id}`            | The call's details and available outcome                  |
+| Get Transcript | `GET /calls/{call_id}/transcript` | Ordered spoken or typed turns                             |
+| Get Analysis   | `GET /calls/{call_id}/analysis`   | Available outcome, caller experience and quality analysis |
+
+For **Get Many**, use **Limit** (1–100, default 50) or **Return All**. Optional filters are scenario UUID, status, an inclusive **Created From** timestamp, an exclusive **Created To** timestamp, and a supplied pagination cursor. Timestamps must include a timezone. The node always acts in the credential's organization and has no organization override.
+
+**Return All** follows server cursors for at most 100 pages and 45 seconds per input item. If that bound is reached, narrow the creation-time range. The node rejects repeated cursors and does not return a partial result as a completed result. Individual HTTP requests have a maximum 30-second deadline, a 2 MiB response limit, and honor workflow cancellation. HTTP redirects are disabled.
+
+For the other operations, set **Call ID** to an ID returned by **Get Many**, for example `={{$json.id}}`. Transcript and analysis reads require a UUID. The details endpoint accepts the service's documented string ID and encodes it as one path segment.
+
+Outputs contain the API's `data` fields; request metadata and list pagination metadata are omitted. Null analysis fields and empty transcripts remain unchanged when processing has not completed or the feature is unavailable. n8n item links identify the input that produced each output.
+
+## Example workflow
+
+Import [examples/review-calls.json](examples/review-calls.json), then select your own Sarj credential in each Sarj AI node. The workflow lists one call and uses its ID to retrieve details, transcript and analysis. It contains no credential values and no customer records.
+
+For a daily report, add a Schedule Trigger before **Get Many**, filter by the previous day's creation-time range, and enable **Return All**. Downstream nodes can inspect each call's status, duration and available outcome.
+
+## Errors and data handling
+
+Authentication, permission/pilot eligibility, missing call, rate-limit, timeout and malformed-response failures have concise messages. Raw service errors, request headers and credential values are not copied into node errors. **Continue On Fail** returns only the safe message for the affected input item.
+
+Read results are returned to your n8n workflow, where your instance's execution-data settings apply. The package adds no logging, telemetry or separate data storage. Network access is restricted to the fixed Sarj REST host. The node exposes four GET operations; Sarj's separate write operations are not included.
+
+## Development
+
+```sh
+npm ci
+npm run check
+npm run check:package
 npm run dev
 ```
 
-This starts n8n with your nodes loaded and hot reload enabled.
+`npm run check` runs the unchanged official n8n strict linter and builds/tests the actual node class with synthetic HTTP fixtures. `npm run check:package` checks the distributable in a separate consumer. Tests use generic synthetic data, not a Sarj account or customer records. `npm run dev` launches the official n8n development runner.
 
-## What's Included
+The production-source OpenAPI schemas were checked on 27 November 2026. All four REST routes already exist. Call history, transcript and analysis access depend on the organization's enabled service features.
 
-This starter repository includes two example nodes to learn from:
+## Publishing and verification
 
-- **[Example Node](nodes/Example/)** - A simple starter node that shows the basic structure with a custom `execute` method
-- **[GitHub Issues Node](nodes/GithubIssues/)** - A complete, production-ready example built using the **declarative style**:
-  - **Low-code approach** - Define operations declaratively without writing request logic
-  - Multiple resources (Issues, Comments)
-  - Multiple operations (Get, Get All, Create)
-  - Two authentication methods (OAuth2 and Personal Access Token)
-  - List search functionality for dynamic dropdowns
-  - Proper error handling and typing
-  - Ideal for HTTP API-based integrations
+Publish from the public `sarj-ai/n8n-nodes-sarj` repository through `.github/workflows/publish.yml`, with npm provenance. Configure npm Trusted Publishing for that repository and workflow, or use the owner's approved npm authentication in GitHub Actions. The official `npm run release` command prepares tags locally and publishes with provenance when run by GitHub Actions.
 
-> [!TIP]
-> The declarative/low-code style (used in GitHub Issues) is the recommended approach for building nodes that interact with HTTP APIs. It significantly reduces boilerplate code and handles requests automatically.
+After publication, run `npx @n8n/scan-community-package n8n-nodes-sarj` and submit the published package in the [n8n Creator Portal](https://creators.n8n.io/nodes). n8n controls review and verified-node availability. A separate public n8n integrations landing page is not guaranteed.
 
-Browse these examples to understand both approaches, then modify them or create your own.
+## Support and references
 
-## Finding Inspiration
+- Support: engineering@sarj.ai
+- [Sarj API documentation](https://platform-docs.sarj.ai/)
+- [Current public OpenAPI schema](https://platform-docs.sarj.ai/api-reference/openapi.json)
+- [Privacy policy](https://sarj.ai/privacy)
+- [Service terms](https://sarj.ai/terms)
+- [n8n community node verification rules](https://docs.n8n.io/connect/create-nodes/build-your-node/reference/verification-guidelines/)
 
-Looking for more examples? Check out these resources:
+## License and branding
 
-- **[npm Community Nodes](https://www.npmjs.com/search?q=keywords:n8n-community-node-package)** - Browse thousands of community-built nodes on npm using the `n8n-community-node-package` tag
-- **[n8n Built-in Nodes](https://github.com/n8n-io/n8n/tree/master/packages/nodes-base/nodes)** - Study the source code of n8n's official nodes for production-ready patterns and best practices
-- **[n8n Credentials](https://github.com/n8n-io/n8n/tree/master/packages/nodes-base/credentials)** - See how authentication is implemented for various services
-
-These are excellent resources to understand how to structure your nodes, handle different API patterns, and implement advanced features.
-
-## Prerequisites
-
-Before you begin, install the following on your development machine:
-
-### Required
-
-- **[Node.js](https://nodejs.org/)** (v22 or higher) and npm
-  - Linux/Mac/WSL: Install via [nvm](https://github.com/nvm-sh/nvm)
-  - Windows: Follow [Microsoft's NodeJS guide](https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-windows)
-- **[git](https://git-scm.com/downloads)**
-
-### Recommended
-
-- Follow n8n's [development environment setup guide](https://docs.n8n.io/integrations/creating-nodes/build/node-development-environment/)
-
-> [!NOTE]
-> The `@n8n/node-cli` is included as a dev dependency and will be installed automatically when you run `npm install`. The CLI includes n8n for local development, so you don't need to install n8n globally.
-
-## Getting Started with this Starter
-
-Follow these steps to create your own n8n community node package:
-
-### 1. Create Your Repository
-
-[Generate a new repository](https://github.com/n8n-io/n8n-nodes-starter/generate) from this template, then clone it:
-
-```bash
-git clone https://github.com/<your-organization>/<your-repo-name>.git
-cd <your-repo-name>
-```
-
-### 2. Install Dependencies
-
-```bash
-npm install
-```
-
-This installs all required dependencies including the `@n8n/node-cli`.
-
-### 3. Explore the Examples
-
-Browse the example nodes in [nodes/](nodes/) and [credentials/](credentials/) to understand the structure:
-
-- Start with [nodes/Example/](nodes/Example/) for a basic node
-- Study [nodes/GithubIssues/](nodes/GithubIssues/) for a real-world implementation
-
-### 4. Build Your Node
-
-Edit the example nodes to fit your use case, or create new node files by copying the structure from [nodes/Example/](nodes/Example/).
-
-> [!TIP]
-> If you want to scaffold a completely new node package, use `npm create @n8n/node` to start fresh with the CLI's interactive generator.
-
-### 5. Configure Your Package
-
-Update `package.json` with your details:
-
-- `name` - Your package name (must start with `n8n-nodes-`)
-- `author` - Your name and email
-- `repository` - Your repository URL
-- `description` - What your node does
-
-Make sure your node is registered in the `n8n.nodes` array.
-
-### 6. Develop and Test Locally
-
-Start n8n with your node loaded:
-
-```bash
-npm run dev
-```
-
-This command runs `n8n-node dev` which:
-
-- Builds your node with watch mode
-- Starts n8n with your node available
-- Automatically rebuilds when you make changes
-- Opens n8n in your browser (usually http://localhost:5678)
-
-You can now test your node in n8n workflows!
-
-> [!NOTE]
-> Learn more about CLI commands in the [@n8n/node-cli documentation](https://www.npmjs.com/package/@n8n/node-cli).
-
-### 7. Lint Your Code
-
-Check for errors:
-
-```bash
-npm run lint
-```
-
-Auto-fix issues when possible:
-
-```bash
-npm run lint:fix
-```
-
-### 8. Build for Production
-
-When ready to publish:
-
-```bash
-npm run build
-```
-
-This compiles your TypeScript code to the `dist/` folder.
-
-### 9. Prepare for Publishing
-
-Before publishing:
-
-1. **Update documentation**: Replace this README with your node's documentation. Use [README_TEMPLATE.md](README_TEMPLATE.md) as a starting point.
-2. **Update the LICENSE**: Add your details to the [LICENSE](LICENSE.md) file.
-3. **Test thoroughly**: Ensure your node works in different scenarios.
-
-### 10. Publish to npm
-
-Publishing is handled automatically by the included GitHub Actions workflow ([.github/workflows/publish.yml](.github/workflows/publish.yml)). It runs on every version tag push and publishes to npm with a provenance attestation — a requirement for n8n community nodes starting May 1, 2026.
-
-#### One-time setup
-
-Configure npm to trust this repository's GitHub Actions workflow so it can publish on your behalf. Log in to [npmjs.com](https://npmjs.com), open your package settings, and under **Publish access → Trusted Publishers** add a publisher with:
-
-- **Repository owner**: your GitHub username or org
-- **Repository name**: your repo name
-- **Workflow name**: `publish.yml`
-
-No token or secret needs to be stored in GitHub — the workflow uses GitHub's OIDC token instead.
-
-> [!NOTE]
-> If you prefer a traditional npm token, create a Granular Access Token on npmjs.com and store it as `NPM_TOKEN` in your repository's Actions secrets. See the comments at the top of `.github/workflows/publish.yml` for details.
-
-#### Releasing a new version
-
-```bash
-npm run release
-```
-
-This lints, builds, prompts for a version bump, updates the changelog, commits, tags, and pushes — which triggers the workflow to publish to npm.
-
-### 11. Submit for Verification (Optional)
-
-Get your node verified for n8n Cloud:
-
-1. Ensure your node meets the [requirements](https://docs.n8n.io/integrations/creating-nodes/deploy/submit-community-nodes/):
-   - Uses MIT license ✅ (included in this starter)
-   - No external package dependencies
-   - Follows n8n's design guidelines
-   - Passes quality and security review
-
-2. Submit through the [n8n Creator Portal](https://creators.n8n.io/nodes)
-
-**Benefits of verification:**
-
-- Available directly in n8n Cloud
-- Discoverable in the n8n nodes panel
-- Verified badge for quality assurance
-- Increased visibility in the n8n community
-
-## Available Scripts
-
-This starter includes several npm scripts to streamline development:
-
-| Script                | Description                                                                 |
-| --------------------- | --------------------------------------------------------------------------- |
-| `npm run dev`         | Start n8n with your node and watch for changes (runs `n8n-node dev`)        |
-| `npm run build`       | Compile TypeScript to JavaScript for production (runs `n8n-node build`)     |
-| `npm run build:watch` | Build in watch mode (auto-rebuild on changes)                               |
-| `npm run lint`        | Check your code for errors and style issues (runs `n8n-node lint`)          |
-| `npm run lint:fix`    | Automatically fix linting issues when possible (runs `n8n-node lint --fix`) |
-| `npm run release`     | Create a new release (runs `n8n-node release`)                              |
-
-> [!TIP]
-> These scripts use the [@n8n/node-cli](https://www.npmjs.com/package/@n8n/node-cli) under the hood. You can also run CLI commands directly, e.g., `npx n8n-node dev`.
-
-## Troubleshooting
-
-### My node doesn't appear in n8n
-
-1. Make sure you ran `npm install` to install dependencies
-2. Check that your node is listed in `package.json` under `n8n.nodes`
-3. Restart the dev server with `npm run dev`
-4. Check the console for any error messages
-
-### Linting errors
-
-Run `npm run lint:fix` to automatically fix most common issues. For remaining errors, check the [n8n node development guidelines](https://docs.n8n.io/integrations/creating-nodes/).
-
-### TypeScript errors
-
-Make sure you're using Node.js v22 or higher and have run `npm install` to get all type definitions.
-
-## Resources
-
-- **[n8n Node Documentation](https://docs.n8n.io/integrations/creating-nodes/)** - Complete guide to building nodes
-- **[n8n Community Forum](https://community.n8n.io/)** - Get help and share your nodes
-- **[@n8n/node-cli Documentation](https://www.npmjs.com/package/@n8n/node-cli)** - CLI tool reference
-- **[n8n Creator Portal](https://creators.n8n.io/nodes)** - Submit your node for verification
-- **[Submit Community Nodes Guide](https://docs.n8n.io/integrations/creating-nodes/deploy/submit-community-nodes/)** - Verification requirements and process
-
-## Contributing
-
-Have suggestions for improving this starter? [Open an issue](https://github.com/n8n-io/n8n-nodes-starter/issues) or submit a pull request!
-
-## License
-
-[MIT](https://github.com/n8n-io/n8n-nodes-starter/blob/master/LICENSE.md)
+The node's code is MIT-licensed, retaining the n8n starter attribution. Sarj's hosted service is governed by its service terms. The icons are faithful vector traces of Sarj's official S icon, with monochrome variants for light and dark themes. Sarj names and logos remain Sarj brand assets; the code license grants no trademark rights.

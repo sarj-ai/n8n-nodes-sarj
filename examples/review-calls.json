@@ -1,0 +1,102 @@
+{
+	"name": "Review Sarj calls",
+	"nodes": [
+		{
+			"parameters": {},
+			"id": "manual-start",
+			"name": "Run manually",
+			"type": "n8n-nodes-base.manualTrigger",
+			"typeVersion": 1,
+			"position": [0, 0]
+		},
+		{
+			"parameters": {
+				"resource": "call",
+				"operation": "getMany",
+				"returnAll": false,
+				"limit": 1,
+				"filters": {}
+			},
+			"id": "sarj-list",
+			"name": "Get recent call",
+			"type": "n8n-nodes-sarj.sarj",
+			"typeVersion": 1,
+			"position": [240, 0]
+		},
+		{
+			"parameters": {
+				"resource": "call",
+				"operation": "get",
+				"callId": "={{$json.id}}"
+			},
+			"id": "sarj-get",
+			"name": "Get call details",
+			"type": "n8n-nodes-sarj.sarj",
+			"typeVersion": 1,
+			"position": [520, -180]
+		},
+		{
+			"parameters": {
+				"resource": "call",
+				"operation": "getTranscript",
+				"callId": "={{$json.id}}"
+			},
+			"id": "sarj-getTranscript",
+			"name": "Get call transcript",
+			"type": "n8n-nodes-sarj.sarj",
+			"typeVersion": 1,
+			"position": [520, 0]
+		},
+		{
+			"parameters": {
+				"resource": "call",
+				"operation": "getAnalysis",
+				"callId": "={{$json.id}}"
+			},
+			"id": "sarj-getAnalysis",
+			"name": "Get call analysis",
+			"type": "n8n-nodes-sarj.sarj",
+			"typeVersion": 1,
+			"position": [520, 180]
+		}
+	],
+	"connections": {
+		"Run manually": {
+			"main": [
+				[
+					{
+						"node": "Get recent call",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Get recent call": {
+			"main": [
+				[
+					{
+						"node": "Get call details",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "Get call transcript",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "Get call analysis",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"active": false,
+	"settings": {
+		"executionOrder": "v1"
+	},
+	"tags": []
+}
