@@ -14,12 +14,15 @@ const { join, resolve } = require('node:path');
 const root = resolve(__dirname, '..');
 const temporary = mkdtempSync(join(tmpdir(), 'sarj-n8n-package-'));
 try {
-	const [pack] = JSON.parse(
+	const packed = Object.values(JSON.parse(
 		execFileSync('npm', ['pack', '--json', '--pack-destination', temporary], {
 			cwd: root,
 			encoding: 'utf8',
 		}),
-	);
+	));
+	assert.equal(packed.length, 1, 'Exactly one package must be packed');
+	const [pack] = packed;
+	assert.equal(pack.name, '@sarj-ai/n8n-nodes-sarj');
 	const allowed =
 		/^(?:package\.json|README\.md|LICENSE\.md|CHANGELOG\.md|examples\/review-calls\.json|dist\/(?:credentials\/SarjApi\.credentials\.(?:js(?:\.map)?|d\.ts)|nodes\/Sarj\/(?:Sarj\.node\.(?:js(?:\.map)?|d\.ts|json)|(?:api|inputs)\.(?:js(?:\.map)?|d\.ts)|sarj(?:\.dark)?\.svg)))$/;
 	for (const file of pack.files)

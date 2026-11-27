@@ -43,7 +43,7 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/npm-artifacts"
           npm pack --json --pack-destination "$RUNNER_TEMP/npm-artifacts" > "$RUNNER_TEMP/npm-pack.json"
-          node -e 'const fs=require("node:fs"),path=require("node:path"),crypto=require("node:crypto");const [pack]=JSON.parse(fs.readFileSync(path.join(process.env.RUNNER_TEMP,"npm-pack.json"),"utf8"));const dir=path.join(process.env.RUNNER_TEMP,"npm-artifacts");const from=path.join(dir,pack.filename),to=path.join(dir,"package.tgz");fs.renameSync(from,to);fs.appendFileSync(process.env.GITHUB_OUTPUT,"sha256="+crypto.createHash("sha256").update(fs.readFileSync(to)).digest("hex")+"\n");'
+          node -e 'const fs=require("node:fs"),path=require("node:path"),crypto=require("node:crypto");const packs=Object.values(JSON.parse(fs.readFileSync(path.join(process.env.RUNNER_TEMP,"npm-pack.json"),"utf8")));if(packs.length!==1||packs[0].name!=="@sarj-ai/n8n-nodes-sarj")throw new Error("Unexpected packed package");const [pack]=packs;const dir=path.join(process.env.RUNNER_TEMP,"npm-artifacts");const from=path.join(dir,pack.filename),to=path.join(dir,"package.tgz");fs.renameSync(from,to);fs.appendFileSync(process.env.GITHUB_OUTPUT,"sha256="+crypto.createHash("sha256").update(fs.readFileSync(to)).digest("hex")+"\n");'
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: startsWith(github.ref, 'refs/tags/')
         with:
