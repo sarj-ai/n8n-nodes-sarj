@@ -2,7 +2,7 @@
 
 Read Sarj AI call history, details, transcripts and analysis in n8n workflows.
 
-This is a release candidate. npm publication and n8n verification have not completed.
+This community node does not claim n8n verified status. n8n controls verification and availability in its verified nodes panel.
 
 ## Requirements
 
@@ -14,9 +14,9 @@ The node uses Sarj's existing REST API at `https://platform-api.sarj.ai/api/v1`.
 
 ## Installation
 
-After the package is published, an n8n instance owner can install `@sarj-ai/n8n-nodes-sarj` from **Settings → Community nodes**, following [n8n's installation guide](https://docs.n8n.io/integrations/community-nodes/installation/).
+An n8n instance owner can install a published version of `@sarj-ai/n8n-nodes-sarj` from **Settings → Community nodes**, following [n8n's installation guide](https://docs.n8n.io/integrations/community-nodes/installation/).
 
-Availability in the verified nodes panel and n8n Cloud depends on n8n approving the package. This release candidate does not claim verified status.
+Availability in the verified nodes panel and n8n Cloud depends on n8n approving the package. This package does not claim verified status.
 
 ## Credentials
 
@@ -73,7 +73,7 @@ The production-source OpenAPI schemas were checked on 27 November 2026. All four
 
 ## Publishing and verification
 
-Publish from the public `sarj-ai/n8n-nodes-sarj` repository through `.github/workflows/publish.yml`, with npm provenance. Configure npm Trusted Publishing for that repository and workflow, or use the owner's approved npm authentication in GitHub Actions. The official `npm run release` command prepares tags locally and publishes with provenance when run by GitHub Actions.
+Publish from the public `sarj-ai/n8n-nodes-sarj` repository through `.github/workflows/publish.yml`, with npm provenance. Configure npm Trusted Publishing for that repository and workflow, or use the owner's approved npm authentication in GitHub Actions. The workflow runs the official `npm run release` admission in dry-run mode, then binds the checked archive to a SHA-256 digest. A separate publishing job verifies that digest and publishes the archive with provenance, without installing project dependencies. Release tags must belong to main. Any initial bootstrap token is held in an isolated temporary config and revoked on exit; interrupted runs still require owner revocation. Configure package-only Trusted Publishing when a subsequent release is ready, and remove the bootstrap GitHub secret immediately after the first release.
 
 After publication, run `npx @n8n/scan-community-package @sarj-ai/n8n-nodes-sarj` and submit the published package in the [n8n Creator Portal](https://creators.n8n.io/nodes). n8n controls review and verified-node availability. A separate public n8n integrations landing page is not guaranteed.
 
