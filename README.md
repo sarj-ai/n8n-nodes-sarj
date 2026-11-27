@@ -1,4 +1,4 @@
-# n8n-nodes-sarj
+# @sarj-ai/n8n-nodes-sarj
 
 Read Sarj AI call history, details, transcripts and analysis in n8n workflows.
 
@@ -14,7 +14,7 @@ The node uses Sarj's existing REST API at `https://platform-api.sarj.ai/api/v1`.
 
 ## Installation
 
-After the package is published, an n8n instance owner can install `n8n-nodes-sarj` from **Settings → Community nodes**, following [n8n's installation guide](https://docs.n8n.io/integrations/community-nodes/installation/).
+After the package is published, an n8n instance owner can install `@sarj-ai/n8n-nodes-sarj` from **Settings → Community nodes**, following [n8n's installation guide](https://docs.n8n.io/integrations/community-nodes/installation/).
 
 Availability in the verified nodes panel and n8n Cloud depends on n8n approving the package. This release candidate does not claim verified status.
 
@@ -75,7 +75,7 @@ The production-source OpenAPI schemas were checked on 27 November 2026. All four
 
 Publish from the public `sarj-ai/n8n-nodes-sarj` repository through `.github/workflows/publish.yml`, with npm provenance. Configure npm Trusted Publishing for that repository and workflow, or use the owner's approved npm authentication in GitHub Actions. The official `npm run release` command prepares tags locally and publishes with provenance when run by GitHub Actions.
 
-After publication, run `npx @n8n/scan-community-package n8n-nodes-sarj` and submit the published package in the [n8n Creator Portal](https://creators.n8n.io/nodes). n8n controls review and verified-node availability. A separate public n8n integrations landing page is not guaranteed.
+After publication, run `npx @n8n/scan-community-package @sarj-ai/n8n-nodes-sarj` and submit the published package in the [n8n Creator Portal](https://creators.n8n.io/nodes). n8n controls review and verified-node availability. A separate public n8n integrations landing page is not guaranteed.
 
 ## Support and references
 

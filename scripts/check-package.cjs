@@ -29,7 +29,7 @@ try {
 	execFileSync('tar', ['-xzf', join(temporary, pack.filename), '-C', modules]);
 	const packageFolder = join(modules, 'package');
 	const manifest = JSON.parse(readFileSync(join(packageFolder, 'package.json'), 'utf8'));
-	assert.equal(manifest.name, 'n8n-nodes-sarj');
+	assert.equal(manifest.name, '@sarj-ai/n8n-nodes-sarj');
 	assert.equal(manifest.license, 'MIT');
 	assert.equal(manifest.n8n.strict, true);
 	assert.deepEqual(manifest.dependencies ?? {}, {});
@@ -47,15 +47,16 @@ try {
 			);
 		}
 	}
-	symlinkSync(packageFolder, join(modules, 'n8n-nodes-sarj'), 'dir');
+	mkdirSync(join(modules, '@sarj-ai'));
+	symlinkSync(packageFolder, join(modules, '@sarj-ai/n8n-nodes-sarj'), 'dir');
 	symlinkSync(join(root, 'node_modules/n8n-workflow'), join(modules, 'n8n-workflow'), 'dir');
 	symlinkSync(join(root, 'node_modules/@types'), join(modules, '@types'), 'dir');
 	writeFileSync(
 		join(temporary, 'consumer.cjs'),
 		`
 const assert = require('node:assert/strict');
-const { Sarj } = require('n8n-nodes-sarj/dist/nodes/Sarj/Sarj.node.js');
-const { SarjApi } = require('n8n-nodes-sarj/dist/credentials/SarjApi.credentials.js');
+const { Sarj } = require('@sarj-ai/n8n-nodes-sarj/dist/nodes/Sarj/Sarj.node.js');
+const { SarjApi } = require('@sarj-ai/n8n-nodes-sarj/dist/credentials/SarjApi.credentials.js');
 const node = new Sarj();
 const credential = new SarjApi();
 assert.equal(credential.name, 'sarjApi');
@@ -64,7 +65,7 @@ assert.equal(node.description.properties.find(p => p.name === 'operation').optio
 const parameters = { resource:'call', operation:'getMany', returnAll:false, limit:1, filters:{} };
 const context = {
  getInputData:()=>[{json:{}}], getNodeParameter:name=>parameters[name], getExecutionCancelSignal:()=>undefined,
- getNode:()=>({ id:'demo', name:'Sarj', type:'n8n-nodes-sarj.sarj', typeVersion:1, position:[0,0], parameters:{} }),
+ getNode:()=>({ id:'demo', name:'Sarj', type:'@sarj-ai/n8n-nodes-sarj.sarj', typeVersion:1, position:[0,0], parameters:{} }),
  continueOnFail:()=>false,
  helpers:{ httpRequestWithAuthentication:async function(name,options){
   assert.equal(name,'sarjApi'); assert.equal(options.method,'GET');
@@ -78,8 +79,8 @@ node.execute.call(context).then(result=>assert.equal(result[0][0].json.id,'synth
 	writeFileSync(
 		join(temporary, 'consumer.ts'),
 		`
-import { Sarj } from 'n8n-nodes-sarj/dist/nodes/Sarj/Sarj.node';
-import { SarjApi } from 'n8n-nodes-sarj/dist/credentials/SarjApi.credentials';
+import { Sarj } from '@sarj-ai/n8n-nodes-sarj/dist/nodes/Sarj/Sarj.node';
+import { SarjApi } from '@sarj-ai/n8n-nodes-sarj/dist/credentials/SarjApi.credentials';
 import type { INodeType, ICredentialType } from 'n8n-workflow';
 const node: INodeType = new Sarj();
 const credential: ICredentialType = new SarjApi();

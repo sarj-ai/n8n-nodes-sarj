@@ -1,5 +1,5 @@
 {
-	"name": "n8n-nodes-sarj",
+	"name": "@sarj-ai/n8n-nodes-sarj",
 	"version": "0.1.0",
 	"description": "Read Sarj AI call history, transcripts and analysis with a scoped API key.",
 	"license": "MIT",

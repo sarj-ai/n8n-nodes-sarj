@@ -19,7 +19,7 @@
 			},
 			"id": "sarj-list",
 			"name": "Get recent call",
-			"type": "n8n-nodes-sarj.sarj",
+			"type": "@sarj-ai/n8n-nodes-sarj.sarj",
 			"typeVersion": 1,
 			"position": [240, 0]
 		},
@@ -31,7 +31,7 @@
 			},
 			"id": "sarj-get",
 			"name": "Get call details",
-			"type": "n8n-nodes-sarj.sarj",
+			"type": "@sarj-ai/n8n-nodes-sarj.sarj",
 			"typeVersion": 1,
 			"position": [520, -180]
 		},
@@ -43,7 +43,7 @@
 			},
 			"id": "sarj-getTranscript",
 			"name": "Get call transcript",
-			"type": "n8n-nodes-sarj.sarj",
+			"type": "@sarj-ai/n8n-nodes-sarj.sarj",
 			"typeVersion": 1,
 			"position": [520, 0]
 		},
@@ -55,7 +55,7 @@
 			},
 			"id": "sarj-getAnalysis",
 			"name": "Get call analysis",
-			"type": "n8n-nodes-sarj.sarj",
+			"type": "@sarj-ai/n8n-nodes-sarj.sarj",
 			"typeVersion": 1,
 			"position": [520, 180]
 		}
